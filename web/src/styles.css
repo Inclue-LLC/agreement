@@ -13,18 +13,6 @@
   --gray-bg: #eef0f3; --gray: #5b6270;
   color-scheme: light;
 }
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #12151b; --surface: #1b1f27; --text: #e7e9ee; --muted: #9aa1ad; --border: #2c323d;
-    --accent: #6d93f2; --accent-text: #0d1220;
-    --red-bg: #3b1d1d; --red: #f2a5a0;
-    --yellow-bg: #3a2e12; --yellow: #f0c96b;
-    --green-bg: #173323; --green: #8fd6a6;
-    --blue-bg: #1c2a4a; --blue: #9bb6f5;
-    --gray-bg: #262b34; --gray: #aab0bb;
-    color-scheme: dark;
-  }
-}
 * { box-sizing: border-box; }
 body {
   margin: 0; background: var(--bg); color: var(--text);
