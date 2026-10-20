@@ -9,6 +9,7 @@ const ALLOWED_DOMAIN = "@inclue-llc.jp";
 
 export default function App() {
   const [user, setUser] = useState<User | null | undefined>(undefined);
+  const [loginError, setLoginError] = useState<string | null>(null);
 
   useEffect(() => onAuthStateChanged(auth, setUser), []);
 
@@ -19,9 +20,18 @@ export default function App() {
       <div className="center login">
         <h1>契約書管理</h1>
         <p>契約書をアップロードすると、AIが概要・条件・契約期間を読み取ります。</p>
-        <button className="primary" onClick={() => signInWithPopup(auth, googleProvider)}>
+        <button
+          className="primary"
+          onClick={() => {
+            setLoginError(null);
+            signInWithPopup(auth, googleProvider).catch((err) =>
+              setLoginError(err instanceof Error ? err.message : String(err)),
+            );
+          }}
+        >
           Googleでログイン
         </button>
+        {loginError && <p className="error">ログインに失敗しました: {loginError}</p>}
       </div>
     );
   }
