@@ -12,7 +12,8 @@ import { buildReminderMail, needsReminder, sendMail } from "./reminder.js";
 import { effectiveEndDate, type ContractDoc } from "./types.js";
 
 initializeApp();
-setGlobalOptions({ region: "asia-northeast1" });
+// 社内利用なので同時実行数を絞り、想定外のアクセスで費用が膨らまないようにする
+setGlobalOptions({ region: "asia-northeast1", maxInstances: 3 });
 
 const anthropicApiKey = defineSecret("ANTHROPIC_API_KEY");
 const smtpPassword = defineSecret("SMTP_PASSWORD");

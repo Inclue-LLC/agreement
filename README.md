@@ -25,11 +25,24 @@ Firebase（Hosting / Firestore / Storage / Cloud Functions）で動きます。
 
 ### 1. Firebase プロジェクト
 
-1. [Firebase コンソール](https://console.firebase.google.com/)でプロジェクトを作成し、**Blaze（従量課金）プラン**にする（Cloud Functions と定期実行に必要）。
+1. [Firebase コンソール](https://console.firebase.google.com/)でプロジェクトを作成し、**Blaze（従量課金）プラン**にする（Cloud Functions と Storage に必要。無料枠はSparkと同じだけ付く）。続けて下の「予算アラート」を設定する。
 2. Authentication → ログイン方法 → **Google** を有効にする。
 3. Firestore Database と Storage を作成する（リージョンは `asia-northeast1` 推奨）。
 4. プロジェクトの設定 → マイアプリ → ウェブアプリを追加し、表示された設定値を控える。
 5. `.firebaserc` の `YOUR_FIREBASE_PROJECT_ID` を自分のプロジェクトIDに書き換える。
+
+### 予算アラート（Blaze にしたら最初に）
+
+使いすぎたときにメールで気づけるようにします。アラートは通知だけで、課金を止めるものではありません。
+
+1. Firebase コンソール → ⚙ プロジェクトの設定 → **使用量と請求額** → **詳細と設定** を開く（Google Cloud の請求画面に移動します）。
+   もしくは [Google Cloud コンソールの「予算とアラート」](https://console.cloud.google.com/billing/budgets) を直接開く。
+2. **予算を作成** → 名前「契約書管理」、対象のプロジェクトにこのプロジェクトを選ぶ。
+3. 予算の種類は「指定額」、金額は **500円**（目安。実際はほぼ0円です）。
+4. しきい値は **50% / 90% / 100%**（実績）にして、「請求先アカウントの管理者と ユーザーにメールで通知」をオンにする。
+5. 保存。
+
+Claude API 側も上限を決めておきます。[Anthropic コンソール](https://console.anthropic.com/) → Settings → **Limits** で月の利用上限（例: $10）を設定し、Billing の自動チャージ（Auto reload）はオフのままにしておくと、前払いした分以上は使われません。
 
 ### 2. APIキーとメール送信の設定
 
@@ -71,6 +84,12 @@ firebase deploy
 
 `https://<プロジェクトID>.web.app` で使えます。
 
+初回のデプロイで「Artifact Registry のクリーンアップポリシーを設定するか」聞かれたら **Yes**（保存日数は 1 日）にしてください。Functions のビルドイメージが溜まって保管料がかかるのを防ぎます。聞かれなかった場合は次で設定できます。
+
+```bash
+firebase functions:artifacts:setpolicy --location asia-northeast1 --days 1
+```
+
 ## 利用できる人を変える
 
 既定では `@inclue-llc.jp` のGoogleアカウントだけがログイン・閲覧できます。変えるときは次の4か所を揃えて書き換えてください。
@@ -97,7 +116,12 @@ cd functions && npm test
 ## 費用の目安
 
 - Claude API（Claude Opus 5.5）: 入力 $4 / 出力 $20（100万トークンあたり）。10ページ程度の契約書1件で数十円程度です。
-- Firebase: 社内利用の規模なら無料枠内に収まることがほとんどです（Cloud Scheduler は1ジョブ月$0.10程度）。
+- Firebase（Blaze）: 社内利用の規模なら無料枠内に収まり、ほぼ0円です。
+  - Cloud Functions: 月200万回まで無料（解析は1件1回、通知は1日1回）
+  - Cloud Storage: 5GBまで無料
+  - Cloud Scheduler: 3ジョブまで無料（使うのは1つ）
+  - ビルドイメージの保管で月数円かかることがあります（上のクリーンアップポリシーで抑えられます）
+- Functions は同時に最大3台までしか起動しない設定にしてあり、想定外のアクセスがあっても費用が膨らみにくくしています。
 
 ## 注意
 
