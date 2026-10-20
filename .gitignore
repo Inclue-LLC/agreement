@@ -1,0 +1,10 @@
+node_modules/
+functions/lib/
+web/dist/
+.env.local
+*.local
+.firebase/
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+*.tsbuildinfo

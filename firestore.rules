@@ -1,0 +1,26 @@
+rules_version = '2';
+
+// 社内メンバー（@inclue-llc.jp の確認済みGoogleアカウント）だけが利用できる。
+// 別ドメインで使う場合は下の正規表現を書き換える（storage.rules も同様）。
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isMember() {
+      return request.auth != null
+        && request.auth.token.email_verified == true
+        && request.auth.token.email.matches('.*@inclue-llc[.]jp$');
+    }
+
+    match /contracts/{contractId} {
+      allow read: if isMember();
+      allow create: if isMember()
+        && request.resource.data.uploadedBy == request.auth.uid
+        && request.resource.data.status == 'uploading';
+      // AI解析結果（analysis / status）はFunctionsのみが書き込む。
+      // 人が直せるのは手動補正欄（overrides）とメモだけ。
+      allow update: if isMember()
+        && request.resource.data.diff(resource.data).affectedKeys()
+             .hasOnly(['overrides', 'memo', 'updatedAt']);
+      allow delete: if isMember();
+    }
+  }
+}

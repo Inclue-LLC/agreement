@@ -1,0 +1,19 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    function isMember() {
+      return request.auth != null
+        && request.auth.token.email_verified == true
+        && request.auth.token.email.matches('.*@inclue-llc[.]jp$');
+    }
+
+    match /contracts/{contractId}/{fileName} {
+      allow read: if isMember();
+      allow create: if isMember()
+        && request.resource.size < 25 * 1024 * 1024
+        && request.resource.contentType.matches('application/pdf|image/(png|jpeg|webp|gif)');
+      allow delete: if isMember();
+    }
+  }
+}
