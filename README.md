@@ -29,7 +29,7 @@ Firebase（Hosting / Firestore / Storage / Cloud Functions）で動きます。
 2. Authentication → ログイン方法 → **Google** を有効にする。
 3. Firestore Database と Storage を作成する（リージョンは `asia-northeast1` 推奨）。
 4. プロジェクトの設定 → マイアプリ → ウェブアプリを追加し、表示された設定値を控える。
-5. `.firebaserc` の `YOUR_FIREBASE_PROJECT_ID` を自分のプロジェクトIDに書き換える。
+5. `.firebaserc` のプロジェクトID（inclue-agreement）が自分のものと合っているか確認する。
 
 ### 予算アラート（Blaze にしたら最初に）
 
@@ -58,7 +58,7 @@ firebase functions:secrets:set ANTHROPIC_API_KEY
 firebase functions:secrets:set SMTP_PASSWORD
 ```
 
-`functions/.env` を作り、送信元などを書きます。
+`functions/.env` に送信元などを書きます。
 
 ```
 SMTP_USER=送信に使うアカウント@inclue-llc.jp
@@ -72,7 +72,7 @@ APP_URL=https://<プロジェクトID>.web.app
 
 ### 3. フロントエンドの設定
 
-`web/.env.example` を `web/.env.local` にコピーし、手順1-4の値を入れます。
+`web/.env` に inclue-agreement プロジェクトの値が入っています。別のプロジェクトで使うときは書き換えてください。
 
 ### 4. デプロイ
 
