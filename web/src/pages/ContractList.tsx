@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import type { User } from "firebase/auth";
-import { collection, onSnapshot, orderBy, query } from "firebase/firestore";
+import { collection, doc, onSnapshot, orderBy, query, serverTimestamp, updateDoc } from "firebase/firestore";
 import { db } from "../firebase";
 import { type Contract, daysUntil, effectiveEndDate, effectiveTitle } from "../types";
 import UploadBox from "../components/UploadBox";
@@ -37,12 +37,24 @@ export default function ContractList({ user }: { user: User }) {
       .sort((a, b) => key(a).localeCompare(key(b)));
   }, [contracts, filter]);
 
+  const stuck = contracts.filter((c) => c.status === "uploading" || c.status === "error");
+
+  async function reanalyzeStuck() {
+    if (!confirm(`解析が終わっていない${stuck.length}件を解析し直しますか？`)) return;
+    await Promise.all(
+      stuck.map((c) => updateDoc(doc(db, "contracts", c.id), { reanalyzeRequestedAt: serverTimestamp() })),
+    );
+  }
+
   return (
     <>
       <UploadBox user={user} />
       <div className="toolbar">
         <h2>契約一覧（{contracts.length}件）</h2>
-        <input placeholder="契約名・相手先で検索" value={filter} onChange={(e) => setFilter(e.target.value)} />
+        <div className="row">
+          {stuck.length > 0 && <button onClick={reanalyzeStuck}>未解析の{stuck.length}件を再解析</button>}
+          <input placeholder="契約名・相手先で検索" value={filter} onChange={(e) => setFilter(e.target.value)} />
+        </div>
       </div>
       <div className="table-wrap">
         <table>

@@ -16,10 +16,10 @@ service cloud.firestore {
         && request.resource.data.uploadedBy == request.auth.uid
         && request.resource.data.status == 'uploading';
       // AI解析結果（analysis / status）はFunctionsのみが書き込む。
-      // 人が直せるのは手動補正欄（overrides）とメモだけ。
+      // 人が直せるのは手動補正欄（overrides）とメモ、再解析の依頼（reanalyzeRequestedAt）だけ。
       allow update: if isMember()
         && request.resource.data.diff(resource.data).affectedKeys()
-             .hasOnly(['overrides', 'memo', 'updatedAt']);
+             .hasOnly(['overrides', 'memo', 'updatedAt', 'reanalyzeRequestedAt']);
       allow delete: if isMember();
     }
   }

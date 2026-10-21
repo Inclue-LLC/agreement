@@ -2,8 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { deleteDoc, doc, onSnapshot, serverTimestamp, updateDoc } from "firebase/firestore";
 import { deleteObject, getDownloadURL, ref } from "firebase/storage";
-import { httpsCallable } from "firebase/functions";
-import { db, functions, storage } from "../firebase";
+import { db, storage } from "../firebase";
 import { type Contract, effectiveEndDate, effectiveTitle } from "../types";
 import RemainingBadge from "../components/RemainingBadge";
 import StatusBadge from "../components/StatusBadge";
@@ -44,7 +43,7 @@ export default function ContractDetail() {
   }
 
   async function reanalyze() {
-    await httpsCallable(functions, "reanalyzeContract")({ contractId: contract!.id });
+    await updateDoc(doc(db, "contracts", contract!.id), { reanalyzeRequestedAt: serverTimestamp() });
   }
 
   return (

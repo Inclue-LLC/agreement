@@ -5,7 +5,7 @@ import { setGlobalOptions, logger } from "firebase-functions/v2";
 import { defineInt, defineSecret, defineString } from "firebase-functions/params";
 import { onObjectFinalized } from "firebase-functions/v2/storage";
 import { onSchedule } from "firebase-functions/v2/scheduler";
-import { HttpsError, onCall } from "firebase-functions/v2/https";
+import { onDocumentUpdated } from "firebase-functions/v2/firestore";
 import { analyzeContract, isSupportedMediaType } from "./analyze.js";
 import { todayInJapan } from "./dates.js";
 import { buildReminderMail, needsReminder, sendMail } from "./reminder.js";
@@ -59,19 +59,18 @@ export const onContractUploaded = onObjectFinalized(
   },
 );
 
-/** 解析に失敗した契約書を画面から再解析する */
-export const reanalyzeContract = onCall(
-  { secrets: [anthropicApiKey], timeoutSeconds: 540, memory: "1GiB" },
-  async (request) => {
-    const email = request.auth?.token.email ?? "";
-    if (!request.auth?.token.email_verified || !email.endsWith("@inclue-llc.jp")) {
-      throw new HttpsError("permission-denied", "利用権限がありません");
-    }
-    const contractId = String(request.data?.contractId ?? "");
-    const snap = await db.collection("contracts").doc(contractId).get();
-    if (!snap.exists) throw new HttpsError("not-found", "契約書が見つかりません");
-    const doc = snap.data() as ContractDoc;
-    await runAnalysis(contractId, doc.storagePath, doc.contentType);
+/**
+ * 画面の「再解析」ボタンは reanalyzeRequestedAt を書き換える。それを検知して解析し直す。
+ * （ブラウザから関数を直接呼ぶ方式は、組織のポリシーで公開呼び出しが禁止されていると使えないため）
+ */
+export const onReanalyzeRequested = onDocumentUpdated(
+  { document: "contracts/{contractId}", secrets: [anthropicApiKey], timeoutSeconds: 540, memory: "1GiB" },
+  async (event) => {
+    const before = event.data?.before.data() as (ContractDoc & { reanalyzeRequestedAt?: unknown }) | undefined;
+    const after = event.data?.after.data() as (ContractDoc & { reanalyzeRequestedAt?: unknown }) | undefined;
+    if (!before || !after || !after.reanalyzeRequestedAt) return;
+    if (String(before.reanalyzeRequestedAt) === String(after.reanalyzeRequestedAt)) return;
+    await runAnalysis(event.params.contractId, after.storagePath, after.contentType);
   },
 );
 

@@ -74,7 +74,16 @@ APP_URL=https://<プロジェクトID>.web.app
 
 `web/.env` に inclue-agreement プロジェクトの値が入っています。別のプロジェクトで使うときは書き換えてください。
 
-### 4. デプロイ
+### 4. 関数に権限を付ける
+
+新しい Google Cloud プロジェクトでは、関数が使うサービスアカウント（`<プロジェクト番号>-compute@developer.gserviceaccount.com`）に権限が自動で付きません。
+[IAM 画面](https://console.cloud.google.com/iam-admin/iam)の「アクセスを許可」から、このアカウントに次のロールを付けてください。
+
+- Cloud Build サービス アカウント（関数のビルド）
+- Cloud Datastore ユーザー（Firestore の読み書き）
+- Storage オブジェクト閲覧者（アップロードされた契約書の読み込み）
+
+### 5. デプロイ
 
 ```bash
 (cd functions && npm install)
@@ -92,11 +101,10 @@ firebase functions:artifacts:setpolicy --location asia-northeast1 --days 1
 
 ## 利用できる人を変える
 
-既定では `@inclue-llc.jp` のGoogleアカウントだけがログイン・閲覧できます。変えるときは次の4か所を揃えて書き換えてください。
+既定では `@inclue-llc.jp` のGoogleアカウントだけがログイン・閲覧できます。変えるときは次の箇所を揃えて書き換えてください。
 
 - `firestore.rules` / `storage.rules` の正規表現
 - `web/src/App.tsx` の `ALLOWED_DOMAIN`、`web/src/firebase.ts` の `hd`
-- `functions/src/index.ts` の `reanalyzeContract` 内のドメイン判定
 
 ## ローカル開発
 
