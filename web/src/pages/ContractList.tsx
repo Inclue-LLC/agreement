@@ -41,9 +41,14 @@ export default function ContractList({ user }: { user: User }) {
 
   async function reanalyzeStuck() {
     if (!confirm(`解析が終わっていない${stuck.length}件を解析し直しますか？`)) return;
-    await Promise.all(
-      stuck.map((c) => updateDoc(doc(db, "contracts", c.id), { reanalyzeRequestedAt: serverTimestamp() })),
-    );
+    try {
+      await Promise.all(
+        stuck.map((c) => updateDoc(doc(db, "contracts", c.id), { reanalyzeRequestedAt: serverTimestamp() })),
+      );
+      alert(`${stuck.length}件の再解析を依頼しました。1〜2分で状態が変わります。`);
+    } catch (err) {
+      alert(`再解析の依頼に失敗しました: ${err instanceof Error ? err.message : err}`);
+    }
   }
 
   return (

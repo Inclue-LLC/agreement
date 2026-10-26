@@ -43,7 +43,11 @@ export default function ContractDetail() {
   }
 
   async function reanalyze() {
-    await updateDoc(doc(db, "contracts", contract!.id), { reanalyzeRequestedAt: serverTimestamp() });
+    try {
+      await updateDoc(doc(db, "contracts", contract!.id), { reanalyzeRequestedAt: serverTimestamp() });
+    } catch (err) {
+      alert(`再解析の依頼に失敗しました: ${err instanceof Error ? err.message : err}`);
+    }
   }
 
   return (
